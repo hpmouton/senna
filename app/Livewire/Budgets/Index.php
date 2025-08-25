@@ -90,9 +90,14 @@ class Index extends Component
 
     public function render()
     {
-        $user = Auth::user();
+         $user = Auth::user();
         $startOfMonth = $this->currentDate->copy()->startOfMonth();
         $endOfMonth = $this->currentDate->copy()->endOfMonth();
+
+        $totalIncome = $user->transactions()
+            ->where('transactions.type', TransactionType::INCOME)
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->sum('amount');
 
         $budgets = $user->budgets()
             ->with('category')
@@ -102,9 +107,8 @@ class Index extends Component
 
         $budgetedCategoryIds = $budgets->pluck('category_id');
 
-        // Get total spending for each budgeted category
         $spending = $user->transactions()
-            ->where('transactions.type', TransactionType::EXPENSE) // Changed from 'type'
+            ->where('transactions.type', TransactionType::EXPENSE)
             ->whereIn('category_id', $budgetedCategoryIds)
             ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
             ->selectRaw('category_id, sum(amount) as total_spent')
@@ -115,6 +119,7 @@ class Index extends Component
         $availableCategories = $user->categories()->whereNotIn('id', $budgetedCategoryIds)->get();
 
         return view('livewire.budgets.index', [
+            'totalIncome' => $totalIncome, // Pass new data to the view
             'budgets' => $budgets,
             'spending' => $spending,
             'availableCategories' => $availableCategories,

@@ -4,7 +4,7 @@
             <div>
                 <h1 class="text-2xl font-semibold">Transactions</h1>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Log and manage your income and expenses.
+                    A clear overview of your income and expenses.
                 </p>
             </div>
             <flux:button variant="primary" wire:click="create">
@@ -27,48 +27,55 @@
             </flux:select>
         </div>
 
-        <div class="mt-8 flow-root">
-             <div class="overflow-x-auto rounded-lg border dark:border-gray-700">
-                <table class="min-w-full divide-y-2 divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
-                        <tr>
-                            <th class="px-4 py-2 text-left font-medium">Date</th>
-                            <th class="px-4 py-2 text-left font-medium">Description</th>
-                            <th class="px-4 py-2 text-left font-medium">Category</th>
-                            <th class="px-4 py-2 text-left font-medium">Account</th>
-                            <th class="px-4 py-2 text-right font-medium">Amount</th>
-                            <th class="px-4 py-2"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($transactions as $transaction)
-                            <tr wire:key="{{ $transaction->id }}">
-                                <td class="px-4 py-2">{{ $transaction->transaction_date->format('M d, Y') }}</td>
-                                <td class="px-4 py-2 font-medium">{{ $transaction->description }}</td>
-                                <td class="px-4 py-2">{{ $transaction->category?->name ?? 'N/A' }}</td>
-                                <td class="px-4 py-2">{{ $transaction->account->name }}</td>
-                                <td class="px-4 py-2 text-right font-semibold 
-                                    {{ $transaction->type === \App\Enums\TransactionType::INCOME ? 'text-green-600' : 'text-gray-800 dark:text-gray-200' }}">
-                                    {{ $transaction->type === \App\Enums\TransactionType::INCOME ? '+' : '-' }}${{ number_format($transaction->amount, 2) }}
-                                </td>
-                                <td class="px-4 py-2 text-right">
+        <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            
+            <div class="rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="border-b p-4 dark:border-gray-700">
+                    <h3 class="font-semibold">Income</h3>
+                </div>
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse($incomes as $transaction)
+                        <li wire:key="income-{{ $transaction->id }}" class="group flex items-center justify-between p-4">
+                            <div>
+                                <p class="font-medium text-gray-800 dark:text-gray-200">{{ $transaction->description }}</p>
+                                <p class="text-sm text-gray-500">{{ $transaction->account->name }} &middot; {{ $transaction->transaction_date->format('M d') }}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-green-600">+N${{ number_format($transaction->amount, 2) }}</span>
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity">
                                     <flux:button wire:click="edit({{ $transaction->id }})" icon="pencil" variant="ghost" size="sm" />
-                                    <flux:button wire:click="delete({{ $transaction->id }})" 
-                                               wire:confirm="Are you sure you want to delete this transaction?"
-                                               icon="trash" variant="ghost" color="danger" size="sm" />
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center p-6">No transactions found.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-             </div>
-             <div class="mt-4">
-                 {{ $transactions->links() }}
-             </div>
+                                </div>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="p-6 text-center text-sm text-gray-500">No income transactions found.</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            <div class="rounded-lg border bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="border-b p-4 dark:border-gray-700">
+                    <h3 class="font-semibold">Expenses</h3>
+                </div>
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse($expenses as $transaction)
+                        <li wire:key="expense-{{ $transaction->id }}" class="group flex items-center justify-between p-4">
+                            <div>
+                                <p class="font-medium text-gray-800 dark:text-gray-200">{{ $transaction->description }}</p>
+                                <p class="text-sm text-gray-500">{{ $transaction->account->name }} &middot; {{ $transaction->transaction_date->format('M d') }}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-gray-800 dark:text-gray-200">-N${{ number_format($transaction->amount, 2) }}</span>
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <flux:button wire:click="edit({{ $transaction->id }})" icon="pencil" variant="ghost" size="sm" />
+                                </div>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="p-6 text-center text-sm text-gray-500">No expense transactions found.</li>
+                    @endforelse
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -97,7 +104,7 @@
                     <flux:select wire:model="form.category_id" label="Category (Optional)">
                         <option value="">No Category</option>
                         @foreach($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            <option value="{{ $category->id }}">{{ $category->parent?->name . ' > ' }}{{ $category->name }}</option>
                         @endforeach
                     </flux:select>
                     

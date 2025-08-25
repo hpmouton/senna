@@ -37,7 +37,7 @@
                                         </div>
                                         <div class="flex items-center space-x-4">
                                             <p class="text-right font-semibold text-gray-900 dark:text-white">
-                                                ${{ number_format($account->current_balance, 2) }}
+                                                N${{ number_format($account->current_balance, 2) }}
                                             </p>
                                             <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <flux:button wire:click="edit({{ $account->id }})" icon="pencil" variant="ghost" size="sm" />

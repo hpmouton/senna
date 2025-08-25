@@ -2,5 +2,5 @@
     <img src="{{asset('assets/app-logo.png')}}" class="w-full"/> 
 </div>
 <div class="ms-1 grid flex-1 text-start text-sm">
-    <span class="mb-0.5 truncate leading-tight font-semibold">SENNA</span>
+    <span class="mb-0.5 truncate leading-tight font-semibold">Senna.</span>
 </div>

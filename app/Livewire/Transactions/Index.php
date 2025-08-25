@@ -72,16 +72,12 @@ class Index extends Component
             'form.transaction_date' => ['required', 'date'],
         ]);
 
-        // IMPORTANT: For financial apps, this logic should be in a dedicated Service class
-        // using DB::transaction to ensure data integrity.
         DB::transaction(function () {
             if ($this->editingTransaction->exists) {
-                // Update logic
                 $originalAmount = $this->editingTransaction->amount;
                 $originalType = $this->editingTransaction->type;
                 $account = Account::find($this->editingTransaction->account_id);
 
-                // Revert the old transaction amount
                 if ($originalType === TransactionType::INCOME) {
                     $account->decrement('current_balance', $originalAmount);
                 } else {
@@ -90,14 +86,12 @@ class Index extends Component
                 
                 $this->editingTransaction->update($this->form);
 
-                // Apply the new transaction amount
                 if ($this->form['type'] === TransactionType::INCOME->value) {
                     $account->increment('current_balance', $this->form['amount']);
                 } else {
                     $account->decrement('current_balance', $this->form['amount']);
                 }
             } else {
-                // Create logic
                 $account = Account::find($this->form['account_id']);
                 $account->transactions()->create($this->form);
 
@@ -118,7 +112,6 @@ class Index extends Component
         DB::transaction(function () use ($transaction) {
             $account = $transaction->account;
             
-            // Revert the transaction's effect on the account balance
             if ($transaction->type === TransactionType::INCOME) {
                 $account->decrement('current_balance', $transaction->amount);
             } else {
@@ -145,20 +138,31 @@ class Index extends Component
 
     public function render()
     {
-        $query = Auth::user()->transactions()->with(['account', 'category']);
+        $baseQuery = Transaction::query()->whereIn('account_id', $this->accounts->pluck('id'))
+            ->with(['account', 'category']);
 
         if ($this->filterAccount) {
-            $query->where('account_id', $this->filterAccount);
+            $baseQuery->where('account_id', $this->filterAccount);
         }
 
-        if ($this->filterType) {
-            $query->where('type', $this->filterType);
+        $incomeQuery = (clone $baseQuery)->where('type', TransactionType::INCOME);
+
+        $expenseQuery = (clone $baseQuery)->where('type', TransactionType::EXPENSE);
+        
+        if ($this->filterType === TransactionType::INCOME->value) {
+            $expenses = collect(); 
+            $incomes = $incomeQuery->latest('transaction_date')->get();
+        } elseif ($this->filterType === TransactionType::EXPENSE->value) {
+            $incomes = collect(); 
+            $expenses = $expenseQuery->latest('transaction_date')->get();
+        } else {
+            $incomes = $incomeQuery->latest('transaction_date')->get();
+            $expenses = $expenseQuery->latest('transaction_date')->get();
         }
         
-        $transactions = $query->latest('transaction_date')->paginate(15);
-        
         return view('livewire.transactions.index', [
-            'transactions' => $transactions,
+            'incomes' => $incomes,
+            'expenses' => $expenses,
             'transactionTypes' => TransactionType::cases(),
         ]);
     }

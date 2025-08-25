@@ -4,13 +4,19 @@
      x-data="{
         data: @js($data),
         init() {
+            // Function to set the legend color based on the current theme
+            const getLegendColor = () => {
+                return document.documentElement.classList.contains('dark') ? '#FFFFFF' : '#1F2937';
+            }
+
+            // Create the chart instance
             const chart = new Chart(this.$el.querySelector('canvas'), {
                 type: 'doughnut',
                 data: {
                     labels: this.data.labels,
                     datasets: [{
                         data: this.data.values,
-                        backgroundColor: ['#34D399', '#60A5FA', '#FBBF24', '#F87171', '#A78BFA', '#A3E635'],
+                        backgroundColor: ['#30bced', '#094d92', '#d5ecd4', '#ed474a', '#0f1a20'],
                         hoverOffset: 4
                     }]
                 },
@@ -20,18 +26,27 @@
                     plugins: { 
                         legend: { 
                             position: 'bottom',
-                            labels: { color: document.documentElement.classList.contains('dark') ? 'white' : 'black' }
+                            labels: {
+                                color: getLegendColor() // Set initial color
+                            }
                         } 
                     }
                 }
             });
 
-            // Listen for an event from Livewire to update the chart
-            Livewire.on('chartDataUpdated', (newData) => {
-                chart.data.labels = newData.labels;
-                chart.data.datasets[0].data = newData.values;
-                chart.update();
+            // Create an observer to watch for class changes on the <html> element
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'class') {
+                        // When the class changes (theme switch), update the legend color
+                        chart.options.plugins.legend.labels.color = getLegendColor();
+                        chart.update();
+                    }
+                });
             });
+
+            // Start observing the <html> element
+            observer.observe(document.documentElement, { attributes: true });
         }
      }">
     <canvas></canvas>
