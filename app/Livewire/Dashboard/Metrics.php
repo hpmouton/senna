@@ -30,23 +30,26 @@ class Metrics extends Component
 
         $spendingByCategory = $user->transactions()
             ->with('category')
-            ->where('transactions.type', TransactionType::EXPENSE) 
+            ->where('transactions.type', TransactionType::EXPENSE)
             ->where('transaction_date', '>=', $startOfMonth)
+            // Ensure category_id is not null
+            ->whereNotNull('category_id')
             ->selectRaw('category_id, sum(amount) as total')
             ->groupBy('category_id')
             ->orderByDesc('total')
             ->get();
 
-        $chartData = $spendingByCategory->take(5);
+        $chartDataCollection = $spendingByCategory->take(5);
         $otherTotal = $spendingByCategory->skip(5)->sum('total');
 
         if ($otherTotal > 0) {
-            $chartData->push(['category' => ['name' => 'Other'], 'total' => $otherTotal]);
+            $chartDataCollection->push((object)['category' => (object)['name' => 'Other'], 'total' => $otherTotal]);
         }
 
-        $spendingChartLabels = $chartData->pluck('category.name');
-        $spendingChartValues = $chartData->pluck('total');
-        
+        $spendingChartData = [
+            'labels' => $chartDataCollection->pluck('category.name')->toArray(),
+            'values' => $chartDataCollection->pluck('total')->toArray(),
+        ];
         $recentTransactions = $user->transactions()
             ->with(['account', 'category'])
             ->latest('transaction_date')
@@ -57,8 +60,7 @@ class Metrics extends Component
             'netWorth' => $netWorth,
             'incomeThisMonth' => $incomeThisMonth,
             'expensesThisMonth' => $expensesThisMonth,
-            'spendingChartLabels' => $spendingChartLabels,
-            'spendingChartValues' => $spendingChartValues,
+            'spendingChartData' => $spendingChartData,
             'recentTransactions' => $recentTransactions,
         ]);
     }

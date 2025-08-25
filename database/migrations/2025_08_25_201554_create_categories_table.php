@@ -23,10 +23,12 @@ return new class extends Migration
         });
 
 
-        $user = User::factory()->create([
+        $user = User::create([
             'name' => 'Default User',
             'email' => 'user@example.com',
+            'password' => Hash::make('password'), 
         ]);
+
 
         $this->seedDefaultCategories($user->id);
     }
