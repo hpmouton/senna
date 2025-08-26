@@ -83,4 +83,32 @@ class User extends Authenticatable
     {
         return $this->hasManyThrough(Transaction::class, Account::class);
     }
+
+     public function seedDefaultCategories(): void
+    {
+        $categories = [
+            'Income' => ['Salary', 'Bonus', 'Freelance'],
+            'Housing' => ['Rent/Mortgage', 'Utilities', 'Maintenance'],
+            'Food' => ['Groceries', 'Restaurants', 'Coffee Shops'],
+            'Transportation' => ['Gas/Fuel', 'Public Transit', 'Ride Sharing'],
+            'Personal Care' => ['Haircut', 'Toiletries', 'Subscriptions'],
+            'Entertainment' => ['Movies', 'Concerts', 'Hobbies'],
+        ];
+
+        foreach ($categories as $parentName => $children) {
+            // Create the parent category
+            $parent = $this->categories()->create([
+                'name' => $parentName,
+                'parent_id' => null,
+            ]);
+
+            // Create the child categories
+            foreach ($children as $childName) {
+                $this->categories()->create([
+                    'name' => $childName,
+                    'parent_id' => $parent->id,
+                ]);
+            }
+        }
+    }
 }

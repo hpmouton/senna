@@ -7,9 +7,12 @@
                     A compact overview of your financial accounts.
                 </p>
             </div>
-            <flux:button variant="primary" wire:click="create">
-                New Account
-            </flux:button>
+            {{-- This button will now only show if there is at least one account --}}
+            @if($accounts->isNotEmpty())
+                <flux:button variant="primary" wire:click="create">
+                    New Account
+                </flux:button>
+            @endif
         </div>
 
         <div class="mt-8 flow-root">
@@ -54,8 +57,8 @@
                 </div>
             @else
                 <div class="mt-16 flex flex-col items-center justify-center text-center">
-                    <div class="rounded-full bg-gray-100 p-4 dark:bg-gray-800">
-                        <svg class="h-8 w-8 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 10.937a8.97 8.97 0 0 1-1.875-.557a8.966 8.966 0 0 0-1.875-.557m-1.875-.557a8.966 8.966 0 0 0-1.875-.557m1.875-.557a8.966 8.966 0 0 1 1.875.557m-1.875.557a8.966 8.966 0 0 0 1.875.557m0 0a8.966 8.966 0 0 1 1.875.557m-1.875.557a8.966 8.966 0 0 0-1.875.557m1.875.557a8.97 8.97 0 0 0-1.875.557m-1.875.557a8.966 8.966 0 0 1-1.875-.557m1.875-.557a8.966 8.966 0 0 0-1.875-.557m1.875-.557a8.966 8.966 0 0 0-1.875-.557M4.25 10.937a8.97 8.97 0 0 1-1.875-.557a8.966 8.966 0 0 0-1.875-.557m-1.875-.557a8.966 8.966 0 0 0-1.875-.557m1.875-.557a8.966 8.966 0 0 1 1.875.557m-1.875.557a8.966 8.966 0 0 0 1.875.557m0 0a8.966 8.966 0 0 1 1.875.557m-1.875.557a8.966 8.966 0 0 0-1.875.557m1.875.557a8.97 8.97 0 0 0-1.875.557m1.875.557a8.966 8.966 0 0 1-1.875-.557m1.875-.557a8.966 8.966 0 0 0-1.875-.557m0 0a8.966 8.966 0 0 0-1.875-.557" /></svg>
+                    <div class="rounded-full bg-red-100 border border-red-400 p-4 dark:bg-gray-800">
+                        <flux:icon.blocks class="h-8 w-8 text-red-400" />
                     </div>
                     <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No Accounts Yet</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding your first financial account.</p>
@@ -68,7 +71,7 @@
     </div>
 
     <flux:modal wire:model="showModal" variant="flyout">
-        <div class="">
+        <div class="p-6">
             <h2 class="text-lg font-semibold">
                 {{ optional($this->editingAccount)->exists ? 'Edit Account' : 'Create Account' }}
             </h2>
@@ -86,7 +89,7 @@
                     </div>
                     <div>
                         <flux:input wire:model="form.starting_balance" label="Starting Balance" type="number" step="1"
-                                 :disabled="optional($this->editingAccount)->exists" />
+                                  :disabled="optional($this->editingAccount)->exists" />
                         @if(optional($this->editingAccount)->exists)
                             <span class="text-xs text-gray-500 dark:text-gray-400">Starting balance cannot be changed.</span>
                         @endif
