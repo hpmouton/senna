@@ -96,7 +96,7 @@ class Metrics extends Component
             $daysInCycle = $cycleStartDate->diffInDays($cycleEndDate);
             $dailyBurnRate = $lastSalary->amount / $daysInCycle;
 
-            for ($day = $cycleStartDate->copy(); $day <= $cycleEndDate; $day->addDay()) {
+            for ($day = $cycleStartDate->copy(); $day <= now() && $day <= $cycleEndDate; $day->addDay()) {
                 $dateString = $day->format('Y-m-d');
                 $trendLabels[] = $day->format('j M');
 
