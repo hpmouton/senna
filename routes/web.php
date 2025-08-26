@@ -6,16 +6,17 @@ use App\Livewire\Accounts\Index as Aindex;
 use App\Livewire\Transactions\Index as Tindex;
 use App\Livewire\Categories\Index as Cindex;
 use App\Livewire\Budgets\Index as Bindex;
+use App\Livewire\Goals\Index as Gindex;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+
 
 Route::middleware(['auth'])->group(function () {
+    Route::view('dashboard', 'dashboard')->name('dashboard');
+
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
@@ -26,6 +27,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', Tindex::class)->name('transactions.index'); 
     Route::get('/categories', Cindex::class)->name('categories.index'); 
     Route::get('/budgets', Bindex::class)->name('budgets.index'); 
+    Route::get('/goals', Gindex::class)->name('goals.index');
+
 
 
 });
