@@ -5,6 +5,7 @@ namespace App\Livewire\Budgets;
 use App\Enums\TransactionType;
 use App\Models\Budget;
 use App\Models\Category;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -90,12 +91,14 @@ class Index extends Component
 
     public function render()
     {
-         $user = Auth::user();
+          $user = Auth::user();
+        $userAccountIds = $user->accounts()->pluck('id');
         $startOfMonth = $this->currentDate->copy()->startOfMonth();
         $endOfMonth = $this->currentDate->copy()->endOfMonth();
-
-        $totalIncome = $user->transactions()
-            ->where('transactions.type', TransactionType::INCOME)
+        
+        $totalIncome = Transaction::query()
+            ->whereIn('account_id', $userAccountIds)
+            ->where('type', TransactionType::INCOME)
             ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
@@ -104,11 +107,12 @@ class Index extends Component
             ->where('year', $this->currentDate->year)
             ->where('month', $this->currentDate->month)
             ->get();
-
+            
         $budgetedCategoryIds = $budgets->pluck('category_id');
 
-        $spending = $user->transactions()
-            ->where('transactions.type', TransactionType::EXPENSE)
+        $spending = Transaction::query()
+            ->whereIn('account_id', $userAccountIds)
+            ->where('type', TransactionType::EXPENSE)
             ->whereIn('category_id', $budgetedCategoryIds)
             ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
             ->selectRaw('category_id, sum(amount) as total_spent')
@@ -119,7 +123,7 @@ class Index extends Component
         $availableCategories = $user->categories()->whereNotIn('id', $budgetedCategoryIds)->get();
 
         return view('livewire.budgets.index', [
-            'totalIncome' => $totalIncome, // Pass new data to the view
+            'totalIncome' => $totalIncome,
             'budgets' => $budgets,
             'spending' => $spending,
             'availableCategories' => $availableCategories,

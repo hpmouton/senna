@@ -2,37 +2,43 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Models\Transaction;
 use Livewire\Component;
 
 use App\Enums\TransactionType;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Layout;
 
 class Metrics extends Component
 {
 
     public function render()
     {
+        
         $user = Auth::user();
+        $userAccountIds = $user->accounts()->pluck('id');
         $startOfMonth = now()->startOfMonth();
 
+        // 1. Key Metrics
         $netWorth = $user->accounts()->sum('current_balance');
 
-        $incomeThisMonth = $user->transactions()
-            ->where('transactions.type', TransactionType::INCOME) 
+        $incomeThisMonth = Transaction::query()
+            ->whereIn('account_id', $userAccountIds)
+            ->where('type', TransactionType::INCOME)
             ->where('transaction_date', '>=', $startOfMonth)
             ->sum('amount');
 
-        $expensesThisMonth = $user->transactions()
-            ->where('transactions.type', TransactionType::EXPENSE) 
+        $expensesThisMonth = Transaction::query()
+            ->whereIn('account_id', $userAccountIds)
+            ->where('type', TransactionType::EXPENSE)
             ->where('transaction_date', '>=', $startOfMonth)
             ->sum('amount');
 
-        $spendingByCategory = $user->transactions()
+        // 2. Data for Spending Chart
+        $spendingByCategory = Transaction::query()
             ->with('category')
-            ->where('transactions.type', TransactionType::EXPENSE)
+            ->whereIn('account_id', $userAccountIds)
+            ->where('type', TransactionType::EXPENSE)
             ->where('transaction_date', '>=', $startOfMonth)
-            // Ensure category_id is not null
             ->whereNotNull('category_id')
             ->selectRaw('category_id, sum(amount) as total')
             ->groupBy('category_id')
