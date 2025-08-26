@@ -76,7 +76,7 @@
 
                 <div class="hidden lg:block">
                     <div
-                        class="relative p-2 border rounded-xl shadow-2xl bg-white/50 dark:bg-rich_black/50 dark:border-gray-700 backdrop-blur-sm">
+                        class="relative p-2 border rounded-xl shadow-2xl bg-white/50 dark:bg-black/50 dark:border-gray-700 backdrop-blur-sm">
                         <img src="{{ asset('assets/sennaui.png') }}"
                             alt="Senna Application Screenshot" class="rounded-lg">
                         <div
