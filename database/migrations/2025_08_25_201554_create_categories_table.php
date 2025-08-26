@@ -21,16 +21,6 @@ return new class extends Migration
             $table->string('name');
             $table->timestamps();
         });
-
-
-        $user = User::create([
-            'name' => 'Default User',
-            'email' => 'user@example.com',
-            'password' => Hash::make('password'), 
-        ]);
-
-
-        $this->seedDefaultCategories($user->id);
     }
 
     /**
@@ -41,34 +31,5 @@ return new class extends Migration
         Schema::dropIfExists('categories');
     }
 
-    /**
-     * A helper function to seed the default categories for a given user.
-     */
-    private function seedDefaultCategories(int $userId): void
-    {
-        $categories = [
-            'Income' => ['Salary', 'Bonus', 'Freelance'],
-            'Housing' => ['Rent/Mortgage', 'Utilities', 'Maintenance'],
-            'Food' => ['Groceries', 'Restaurants', 'Coffee Shops'],
-            'Transportation' => ['Gas/Fuel', 'Public Transit', 'Ride Sharing'],
-            'Personal Care' => ['Haircut', 'Toiletries', 'Subscriptions'],
-            'Entertainment' => ['Movies', 'Concerts', 'Hobbies'],
-        ];
-
-        foreach ($categories as $parentName => $children) {
-            $parent = Category::create([
-                'user_id' => $userId,
-                'name' => $parentName,
-                'parent_id' => null,
-            ]);
-
-            foreach ($children as $childName) {
-                Category::create([
-                    'user_id' => $userId,
-                    'name' => $childName,
-                    'parent_id' => $parent->id,
-                ]);
-            }
-        }
-    }
+   
 };
