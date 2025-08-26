@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('account_id')->constrained('accounts');
-            $table->foreignId('category_id')->constrained('categories');
+            $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
             $table->string('type');
             $table->decimal('amount',15,2);
             $table->text('description');

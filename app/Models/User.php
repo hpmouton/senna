@@ -57,7 +57,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
@@ -75,7 +75,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Budget::class);
     }
-
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
     /**
      * Get all of the transactions for the user through their accounts.
      */
@@ -84,7 +87,7 @@ class User extends Authenticatable
         return $this->hasManyThrough(Transaction::class, Account::class);
     }
 
-     public function seedDefaultCategories(): void
+    public function seedDefaultCategories(): void
     {
         $categories = [
             'Income' => ['Salary', 'Bonus', 'Freelance'],

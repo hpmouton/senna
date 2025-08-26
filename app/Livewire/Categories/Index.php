@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Categories;
 
+use App\Enums\TransactionType;
 use App\Models\Category;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -78,10 +80,26 @@ class Index extends Component
 
     public function render()
     {
-        $allCategories = Auth::user()->categories()->with('parent')->get();
-        
+        $user = Auth::user();
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        $allCategories = $user->categories()->with('children')->get();
+        $parentCategories = $allCategories->whereNull('parent_id');
+
+        $spendingByCategory = Transaction::query()
+            ->whereIn('account_id', $user->accounts()->pluck('id'))
+            ->where('type', TransactionType::EXPENSE)
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->whereNotNull('category_id')
+            ->selectRaw('category_id, sum(amount) as total')
+            ->groupBy('category_id')
+            ->get()
+            ->keyBy('category_id');
+
         return view('livewire.categories.index', [
-            'categories' => $allCategories->whereNull('parent_id'),
+            'categories' => $parentCategories,
+            'spendingByCategory' => $spendingByCategory,
             'parentCategoryOptions' => $allCategories,
         ]);
     }

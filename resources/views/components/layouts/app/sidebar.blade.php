@@ -18,14 +18,14 @@
                     <flux:navlist.item icon="receipt" :href="route('transactions.index')" :current="request()->routeIs('transactions.index')" wire:navigate>{{ __('Transactions') }}</flux:navlist.item>
                     <flux:navlist.item icon="chart-bar-stacked" :href="route('categories.index')" :current="request()->routeIs('categories.index')" wire:navigate>{{ __('Categories') }}</flux:navlist.item>
                     <flux:navlist.item icon="chart-pie" :href="route('budgets.index')" :current="request()->routeIs('budgets.index')" wire:navigate>{{ __('My Budgets') }}</flux:navlist.item>
-                    
+                    <flux:navlist.item icon="piggy-bank" :href="route('goals.index')" :current="request()->routeIs('goals.index')" wire:navigate>{{ __('My Goals') }}</flux:navlist.item>
 
                 </flux:navlist.group>
             </flux:navlist>
 
             <flux:spacer />
 
-            <flux:navlist variant="outline">
+            {{-- <flux:navlist variant="outline">
                 <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                 {{ __('Repository') }}
                 </flux:navlist.item>
@@ -33,7 +33,7 @@
                 <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
                 {{ __('Documentation') }}
                 </flux:navlist.item>
-            </flux:navlist>
+            </flux:navlist> --}}
 
             <!-- Desktop User Menu -->
             <flux:dropdown class="hidden lg:block" position="bottom" align="start">

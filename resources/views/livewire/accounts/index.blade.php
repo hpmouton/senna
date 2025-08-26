@@ -56,7 +56,7 @@
                     </div>
                 </div>
             @else
-                <div class="mt-16 flex flex-col items-center justify-center text-center">
+                <div class="mt-16 py-12 rounded-lg flex flex-col items-center justify-center text-center border-dashed border-2 border-gray-300 dark:border-gray-700">
                     <div class="rounded-full bg-red-100 border border-red-400 p-4 dark:bg-gray-800">
                         <flux:icon.blocks class="h-8 w-8 text-red-400" />
                     </div>
