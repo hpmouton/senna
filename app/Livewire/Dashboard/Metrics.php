@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
+use App\Enums\AccountType;
 use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
@@ -72,55 +73,63 @@ class Metrics extends Component
             'values' => $chartDataCollection->pluck('total')->toArray(),
         ];
 
-        $dailySpending = Transaction::query()
-            ->whereIn('account_id', $userAccountIds)
-            ->where('type', TransactionType::EXPENSE)
-            ->whereBetween('transaction_date', [$cycleStartDate, $cycleEndDate])
-            ->where('description', 'NOT LIKE', '%Transfer to%')
-            ->select(
-                DB::raw("DATE(transaction_date) as date"),
-                DB::raw("SUM(amount) as total")
-            )
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
+        $currentAccounts = $user->accounts()->whereNotIn('type', [AccountType::SAVINGS, AccountType::INVESTMENT])->get();
+        $currentAccountIds = $currentAccounts->pluck('id');
+        
+        $dailyTransactions = Transaction::query()
+            ->whereIn('account_id', $currentAccountIds)
+            ->where('transaction_date', '>=', $cycleStartDate)
+            ->orderBy('transaction_date')
             ->get()
-            ->keyBy('date');
+            ->groupBy(fn ($transaction) => $transaction->transaction_date->format('Y-m-d'));
+
+        $balanceOnCycleStart = $currentAccounts->sum('starting_balance')
+            + Transaction::query()->whereIn('account_id', $currentAccountIds)->where('type', TransactionType::INCOME)->where('transaction_date', '<', $cycleStartDate)->sum('amount')
+            - Transaction::query()->whereIn('account_id', $currentAccountIds)->where('type', TransactionType::EXPENSE)->where('transaction_date', '<', $cycleStartDate)->sum('amount');
 
         $trendLabels = [];
         $trendValues = [];
         $idealValues = [];
-        $surplusAmount = 0;
-        $showSurplusTooltip = false;
+        $runningBalance = $balanceOnCycleStart;
 
         if ($lastSalary) {
-            $runningBalance = $lastSalary->amount;
             $daysInCycle = $cycleStartDate->diffInDays($cycleEndDate);
             $dailyBurnRate = $lastSalary->amount / $daysInCycle;
 
             for ($day = $cycleStartDate->copy(); $day <= $cycleEndDate; $day->addDay()) {
                 $dateString = $day->format('Y-m-d');
                 $trendLabels[] = $day->format('j M');
-                $runningBalance -= ($dailySpending[$dateString]->total ?? 0);
+
+                if (isset($dailyTransactions[$dateString])) {
+                    foreach ($dailyTransactions[$dateString] as $transaction) {
+                        if ($transaction->type === TransactionType::INCOME) {
+                            $runningBalance += $transaction->amount;
+                        } else {
+                            $runningBalance -= $transaction->amount;
+                        }
+                    }
+                }
                 $trendValues[] = $runningBalance;
+                
                 $daysSincePayday = $cycleStartDate->diffInDays($day);
                 $idealBalance = $lastSalary->amount - ($daysSincePayday * $dailyBurnRate);
                 $idealValues[] = max(0, $idealBalance);
             }
-
-            if (now()->isSameDay($cycleEndDate)) {
-                $totalCycleExpenses = $dailySpending->sum('total');
-                $surplusAmount = $lastSalary->amount - $totalCycleExpenses;
-                if ($surplusAmount > 0) {
-                    $showSurplusTooltip = true;
-                }
-            }
         } else {
-            $totalExpensesToDate = 0;
             for ($day = $cycleStartDate->copy(); $day <= now(); $day->addDay()) {
-                $dateString = $day->format('Y-m-d');
+                 $dateString = $day->format('Y-m-d');
                 $trendLabels[] = $day->format('j M');
-                $totalExpensesToDate += ($dailySpending[$dateString]->total ?? 0);
-                $trendValues[] = $totalExpensesToDate;
+
+                if (isset($dailyTransactions[$dateString])) {
+                    foreach ($dailyTransactions[$dateString] as $transaction) {
+                        if ($transaction->type === TransactionType::INCOME) {
+                            $runningBalance += $transaction->amount;
+                        } else {
+                            $runningBalance -= $transaction->amount;
+                        }
+                    }
+                }
+                $trendValues[] = $runningBalance;
             }
         }
 
@@ -145,8 +154,8 @@ class Metrics extends Component
             'recentTransactions' => $recentTransactions,
             'cycleStartDate' => $cycleStartDate,
             'cycleEndDate' => $cycleEndDate,
-            'surplusAmount' => $surplusAmount,
-            'showSurplusTooltip' => $showSurplusTooltip,
+            'surplusAmount' => 0,
+            'showSurplusTooltip' => false,
         ]);
     }
 }

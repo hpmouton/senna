@@ -7,12 +7,16 @@
                     A compact overview of your financial accounts.
                 </p>
             </div>
-            {{-- This button will now only show if there is at least one account --}}
-            @if($accounts->isNotEmpty())
+            <div class="flex items-center space-x-2">
+                @if($accounts->count() >= 2)
+                    <flux:button wire:click="$set('showTransferModal', true)">
+                        Transfer
+                    </flux:button>
+                @endif
                 <flux:button variant="primary" wire:click="create">
                     New Account
                 </flux:button>
-            @endif
+            </div>
         </div>
 
         <div class="mt-8 flow-root">
@@ -56,9 +60,11 @@
                     </div>
                 </div>
             @else
-                <div class="mt-16 py-12 rounded-lg flex flex-col items-center justify-center text-center border-dashed border-2 border-gray-300 dark:border-gray-700">
+                <div class="mt-16 flex flex-col items-center justify-center text-center">
                     <div class="rounded-full bg-red-100 border border-red-400 p-4 dark:bg-gray-800">
-                        <flux:icon.blocks class="h-8 w-8 text-red-400" />
+                        <svg class="h-8 w-8 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                        </svg>
                     </div>
                     <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No Accounts Yet</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding your first financial account.</p>
@@ -70,7 +76,7 @@
         </div>
     </div>
 
-    <flux:modal wire:model="showModal" variant="flyout">
+    <flux:modal wire:model="showModal" class="md:w-96">
         <div class="p-6">
             <h2 class="text-lg font-semibold">
                 {{ optional($this->editingAccount)->exists ? 'Edit Account' : 'Create Account' }}
@@ -99,6 +105,35 @@
             <div class="mt-6 flex justify-end space-x-2">
                 <flux:button variant="ghost" wire:click="$set('showModal', false)">Cancel</flux:button>
                 <flux:button variant="primary" wire:click="save">Save Account</flux:button>
+            </div>
+        </div>
+    </flux:modal>
+    
+    <flux:modal wire:model="showTransferModal" class="md:w-96">
+        <div class="p-6">
+            <h2 class="text-lg font-semibold">
+                Transfer Funds
+            </h2>
+            <div class="mt-4">
+                <form wire:submit="transfer" class="space-y-4">
+                    <flux:select wire:model.live="from_account_id" label="From">
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->id }}">{{ $account->name }} (${{ number_format($account->current_balance, 2) }})</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:select wire:model.live="to_account_id" label="To">
+                        @foreach($accounts->where('id', '!=', $from_account_id) as $account)
+                            <option value="{{ $account->id }}">{{ $account->name }}</option>
+                        @endforeach
+                    </flux:select>
+                    <div>
+                        <flux:input wire:model="amount" label="Amount" type="number" step="0.01" />
+                    </div>
+                </form>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <flux:button variant="ghost" wire:click="$set('showTransferModal', false)">Cancel</flux:button>
+                <flux:button variant="primary" wire:click="transfer">Confirm Transfer</flux:button>
             </div>
         </div>
     </flux:modal>

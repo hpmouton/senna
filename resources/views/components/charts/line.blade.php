@@ -29,7 +29,7 @@
                             tension: 0.4,
                         },
                         {
-                            label: 'Ideal Balance',
+                            label: 'Ideal Trend',
                             data: this.data.idealValues,
                             borderColor: 'rgba(156, 163, 175, 0.5)',
                             fill: false,
@@ -52,7 +52,7 @@
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
+                            beginAtZero: false,
                             grid: {
                                 color: getThemeColor('grid'),
                             },
